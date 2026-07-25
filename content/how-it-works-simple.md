@@ -46,6 +46,11 @@ I pulled the original and every preview size X exposes, and looked at the bytes.
 The original and the timeline preview are both 8-bit palette PNGs. In both of them every pixel
 is either solid or fully transparent. Nothing is half-visible anywhere.
 
+This also settles a claim you will read elsewhere: that the timeline copy is a JPEG, flattened
+onto white because JPEG cannot store transparency. It is neither. The copy X serves in the
+timeline is a palette PNG and it still carries transparency. Had it been flattened onto white,
+none of these posts would survive dark mode, and they plainly do.
+
 The transparent pixels are not scattered, either. Every one of them sits on one half of a
 checkerboard, and not a single one on the other half. That checkerboard covers almost the
 whole picture, and inside it every second pixel has been deleted. The rest — the emblem you
@@ -92,11 +97,9 @@ linked above.
 
 ## Why it works in dark mode
 
-The hidden region does not end up partly transparent. It ends up completely transparent, so it
-is not mixed with anything. It simply shows whatever is behind it: white in light mode, dark
-grey in dark mode, and in both cases the same as the background around it.
-
-The background is not part of the mechanism at all.
+Because the region ends up completely transparent rather than partly, nothing gets mixed. It
+simply shows whatever is behind it — white in light mode, dark grey in dark mode, the same as
+the background around it either way. The background is not part of the mechanism at all.
 
 Here is the transparency itself, magnified, with transparent pixels marked in magenta — the
 original, the 2048px preview and the 1200px preview.
@@ -110,7 +113,9 @@ this.
 
 ## What the other write-ups describe
 
-The documented technique, in English and in Japanese, is about background colours. X shows
+The documented technique — [in Japanese](https://zenn.dev/maaaaph/articles/8a6fb4a1b0b06f) and
+[in English](https://tapandhold.com/tools/how-to-make-tap-and-hold-images) — is about background
+colours. X shows
 images against white in the timeline and against black in the fullscreen viewer. So you build
 a semi-transparent PNG where every pixel is solved for both of those at once:
 
@@ -124,15 +129,11 @@ Two equations, two unknowns, and each pixel's colour and transparency fall out.
 This works, but only on those two backgrounds. Dark mode is a third one: not black, just dark
 grey. On it the file shows something close to the hidden picture, right there in the timeline
 where the cover was supposed to be. Nothing is left to reveal. The people who documented the
-technique say so directly: light mode only.
+technique say so directly — the reference implementation for it is
+[labelled ダークモード不可](https://github.com/Kazuhito00/DualImagePNG-for-X), dark mode not
+supported.
 
-There is a second limit. Transparency can only lighten a pixel, never darken it, so the
-version on white is always the brighter of the two. The cover has to be lighter than the
-hidden picture everywhere, which is why every example of this technique is a black line
-drawing paired with a white one.
-
-Neither limit applies to the posts going viral now. They work in dark mode, and they are
-full-colour renders.
+That limit is enough to rule it out here. The posts going viral now work in dark mode.
 
 ## The checkerboard has to be exactly one pixel
 
@@ -179,7 +180,7 @@ The requirements, all of which the tool handles:
   does not survive the rebuild, so writing it accomplishes nothing.
 - A one-pixel checkerboard over everything you want hidden, solid pixels everywhere else.
 - Long side between 2400px and 4096px.
-- Under 5MB. Above that, X converts the upload to a format with no transparency. (This limit
+- Under 5MB. Above that, X re-encodes the upload as a JPEG and the transparency is gone. (This limit
   and the 4096px cap come from David Buchanan's
   [tweetable-polyglot-png](https://github.com/DavidBuchanan314/tweetable-polyglot-png)
   write-up; I did not verify them myself.)

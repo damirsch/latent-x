@@ -13,8 +13,9 @@ If you just want to make one: **[the tool is here](https://latent-x.vercel.app/)
 
 ## The explanation everyone gives, and what it costs
 
-The technique you will find documented, in English and in Japanese, is about background
-colours. X shows images against white in the timeline and against black in the fullscreen
+The technique you will find documented — [in Japanese](https://zenn.dev/maaaaph/articles/8a6fb4a1b0b06f)
+and [in English](https://tapandhold.com/tools/how-to-make-tap-and-hold-images) — is about
+background colours. X shows images against white in the timeline and against black in the fullscreen
 viewer. So you build a semi-transparent PNG where every pixel is solved for both outcomes at
 once:
 
@@ -28,15 +29,12 @@ Two equations, two unknowns. Solve them and each pixel's colour and transparency
 This works, but only on those two backgrounds. Change either one and the arithmetic breaks.
 Dark mode is a third background: not black, just dark grey. On it the file shows something
 close to the hidden picture — in the timeline, where the cover was supposed to be. Nothing is
-left to reveal. The people who documented the technique say so directly: light mode only.
+left to reveal. The people who documented the technique say so directly — the reference
+implementation for it is [labelled ダークモード不可](https://github.com/Kazuhito00/DualImagePNG-for-X),
+dark mode not supported.
 
-There is a second cost. Transparency can only ever lighten a pixel, never darken it, so the
-version on white is always the brighter of the two. The cover picture has to be lighter than
-the hidden one everywhere, which is why every example of this technique is a black line
-drawing paired with a white one.
-
-Both of those bothered me. The posts going viral right now work fine in dark mode, and they
-are full-colour renders. Whatever they are doing, it is not this.
+That bothered me, because the posts going viral right now work fine in dark mode. Whatever
+they are doing, it is not this.
 
 ## The clue is visible if you just zoom in
 
@@ -60,6 +58,11 @@ Both the original and the timeline version are 8-bit palette PNGs. In both of th
 pixel is either fully opaque or fully transparent — nothing is half-visible anywhere. That
 alone rules out the technique above, which lives entirely in the in-between values.
 
+It also settles a claim the English write-up makes: that the timeline copy is a JPEG, flattened
+onto white because JPEG cannot store transparency. It is neither. The copy X serves in the
+timeline is a palette PNG, and it still carries transparency. If it had been flattened onto
+white, none of these posts would survive dark mode, and they plainly do.
+
 So the effect comes from _which_ pixels are transparent, and in the data the grid is exact:
 every transparent pixel sits on one half of a checkerboard, and not a single one on the other
 half. That checkerboard covers all but a small fraction of the picture, and inside it every
@@ -78,17 +81,17 @@ averages the transparency of neighbouring pixels, which across a checkerboard co
 half. But X re-encodes the result the way it received it: a palette PNG with one transparent
 entry and no in-between values. There is nowhere to put a half, so it has to round.
 
+![How the rounding falls out](../public/figures/rounding.png)
+
 That depends on what you hand it, not on X alone. A PNG with soft, graded transparency keeps
 that transparency through the resize — the older technique above would never work otherwise,
 since the timeline shows a variant too, not the original. Hand X a palette PNG with two states
 and the variant comes back with two states. The trick lives in that second case.
 
-I measured where it rounds. For each preview pixel I worked out how much of the area it came
-from had been opaque, then checked whether that pixel survived. The answer is a hard step
+I measured where it rounds. For each pixel of the variant I worked out how much of the area it
+came from had been opaque, then checked whether that pixel survived. The answer is a hard step
 with nothing on either side of it: half coverage rounds down to fully transparent, solid
 areas round up to fully opaque, and nothing lands in between.
-
-![How the rounding falls out](../public/figures/rounding.png)
 
 The obvious objection is that I do not know which resizing method X uses. It turns out not to
 matter. Shrink the original's transparency yourself, with any of the standard methods, round it
@@ -112,12 +115,10 @@ from the timeline in both themes, back on tap. That encoder is the tool linked a
 
 ## Why this one survives dark mode
 
-The hidden region does not end up partly transparent. It ends up _entirely_ transparent, so
-it is not blended with anything. It shows whatever is behind it: white in light mode, dark
-grey in dark mode, and in both cases indistinguishable from the surrounding background.
-
-The background stops being part of the mechanism at all. That is the practical difference
-from the older technique, and it is why these posts work for everyone.
+Because the region is _entirely_ transparent rather than partly, nothing gets blended. It shows
+whatever is behind it — white in light mode, dark grey in dark mode, indistinguishable from the
+background either way. The background stops being part of the mechanism, which is the practical
+difference from the older technique.
 
 Here is the transparency itself, magnified, with transparent pixels marked in magenta — the
 original, the 2048px variant and the 1200px variant:
@@ -175,7 +176,7 @@ The requirements, all of which the tool handles:
   is destroyed by the re-encode, so writing it accomplishes nothing.
 - A one-pixel checkerboard over everything you want hidden, solid pixels everywhere else.
 - Long side between 2400px and 4096px.
-- Under 5MB, above which X converts the upload to a format with no transparency. (This limit
+- Under 5MB, above which X re-encodes the upload as a JPEG and the transparency is gone. (This limit
   and the 4096px cap come from David Buchanan's
   [tweetable-polyglot-png](https://github.com/DavidBuchanan314/tweetable-polyglot-png)
   write-up; I did not verify them independently.)

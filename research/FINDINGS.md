@@ -70,6 +70,17 @@ on tap. So the model is sufficient to produce the effect, not merely consistent 
 There is no partial alpha and no hidden colour data in the transparent palette entry. The
 entire effect is carried by *which* pixels are transparent, not by their colour.
 
+This also disproves a claim repeated in the English write-ups, that the timeline copy is a JPEG
+flattened onto white. The timeline copy is colour type 3 with a `tRNS` chunk and it still
+carries transparency; a flattened copy could not work in dark mode, which the posts demonstrably
+do.
+
+Public write-ups of the older technique, for reference:
+<https://zenn.dev/maaaaph/articles/8a6fb4a1b0b06f> and
+<https://tapandhold.com/tools/how-to-make-tap-and-hold-images>. Its reference implementation,
+<https://github.com/Kazuhito00/DualImagePNG-for-X>, is labelled ダークモード不可 — dark mode not
+supported — which is the limitation the checkerboard method does not have.
+
 ## Measurement 2: the checkerboard
 
 `research/alpha.py`
