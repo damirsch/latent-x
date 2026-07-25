@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# research inputs and derived artefacts. The scripts in research/ regenerate all of these,
+# and the sample PNGs are re-downloadable from the CDN, so none of it belongs in the repo.
+/images/
+/research/variants/
+/research/out/
+/research/*.bin
+/research/*.json
+__pycache__/
+*.pyc

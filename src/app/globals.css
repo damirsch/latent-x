@@ -1,26 +1,81 @@
 @import "tailwindcss";
 
+@theme {
+	--color-ink-950: #08080a;
+	--color-ink-900: #0d0d10;
+	--color-ink-850: #131317;
+	--color-ink-800: #191920;
+	--color-ink-700: #24242d;
+	--color-ink-600: #34343f;
+	--color-ink-400: #6d6d7c;
+	--color-ink-300: #9a9aa8;
+	--color-ink-100: #e6e6ec;
+
+	--color-amber-glow: #ffb020;
+	--color-amber-dim: #7a5510;
+
+	--font-sans: var(--font-geist-sans);
+	--font-mono: var(--font-geist-mono);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+	color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+	background: var(--color-ink-950);
+	color: var(--color-ink-100);
+	font-family: var(--font-sans), system-ui, sans-serif;
+	-webkit-font-smoothing: antialiased;
+}
+
+/* The transparency checkerboard shown behind preview canvases. Deliberately coarse so it
+   is never mistaken for the 1px alpha grid the tool actually writes into the file. */
+.alpha-grid {
+	background-color: #1a1a20;
+	background-image:
+		linear-gradient(45deg, #23232b 25%, transparent 25%),
+		linear-gradient(-45deg, #23232b 25%, transparent 25%),
+		linear-gradient(45deg, transparent 75%, #23232b 75%),
+		linear-gradient(-45deg, transparent 75%, #23232b 75%);
+	background-size: 16px 16px;
+	background-position:
+		0 0,
+		0 8px,
+		8px -8px,
+		-8px 0px;
+}
+
+input[type="range"] {
+	-webkit-appearance: none;
+	appearance: none;
+	height: 2px;
+	background: var(--color-ink-700);
+	border-radius: 2px;
+	outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: var(--color-amber-glow);
+	cursor: pointer;
+	border: 2px solid var(--color-ink-900);
+}
+
+input[type="range"]::-moz-range-thumb {
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: var(--color-amber-glow);
+	cursor: pointer;
+	border: 2px solid var(--color-ink-900);
+}
+
+::selection {
+	background: var(--color-amber-dim);
+	color: var(--color-ink-100);
 }
