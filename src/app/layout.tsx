@@ -18,7 +18,7 @@ const siteUrl =
 
 const title = "Latent — make press-and-hold images for X"
 const description =
-	"Hide part of a picture so it vanishes in the X timeline and comes back when someone presses and holds the image. Free, and it runs entirely in your browser."
+	"Hide part of a picture so it vanishes in the X timeline and comes back when someone presses and holds the image. Free, and it runs entirely in your browser"
 
 export const metadata: Metadata = {
 	metadataBase: new URL(siteUrl),
@@ -40,8 +40,8 @@ export default function RootLayout({
 	children: React.ReactNode
 }>) {
 	return (
-		<html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full`}>
-			<body className="min-h-full">{children}</body>
+		<html lang='en' className={`${geistSans.variable} ${geistMono.variable} h-full`}>
+			<body className='min-h-full'>{children}</body>
 		</html>
 	)
 }
