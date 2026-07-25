@@ -26,9 +26,15 @@ The real mechanism is a **quantisation artefact in X's thumbnail pipeline**:
    stay hidden is covered by a 1:1 checkerboard: every other pixel is fully transparent.
 2. To build a preview variant, X downscales the image. In the checkerboard region the
    resampled alpha lands near 50%.
-3. X re-encodes every variant as PNG8 with **binary** alpha again — a single fully
-   transparent palette index, no partial alpha anywhere. The ~50% alpha therefore has to be
-   rounded, and it rounds **down to fully transparent**.
+3. X re-encodes every variant of *this* file as PNG8 with **binary** alpha again — a single
+   fully transparent palette index, no partial alpha anywhere. The ~50% alpha therefore has to
+   be rounded, and it rounds **down to fully transparent**.
+
+   This is conditional on the upload, not a blanket property of the pipeline. Partial alpha
+   demonstrably survives into previews for other inputs, otherwise the older
+   background-algebra technique could not work in the timeline at all — the timeline is served
+   a variant, not the original. We have not tested a graded-alpha upload directly; the
+   conditional reading is the one the evidence supports.
 4. Result: the checkerboarded region does not become faint in the timeline. It disappears
    completely. Only the fully opaque region survives.
 5. Loading the original brings back the untouched checkerboard, and the hidden artwork
@@ -176,6 +182,33 @@ other.
 Caveat: the upper bound rests on a single hands-on test rather than a sweep, and the exact
 variant the mobile gesture requests was inferred from the behaviour rather than observed on
 the wire. The lower bound is measured directly and holds independently.
+
+## Measurement 7: the model reproduces X's own mask
+
+`research/kernels.py` takes the alpha channel of `orig`, shrinks it locally to the size of
+`medium` with several resampling kernels, thresholds at 0.575, and compares the result to the
+alpha channel `medium` actually carries.
+
+| Kernel | Agreement with X | Coverage inside the checkerboard |
+|---|---|---|
+| box | 99.54% | mean 0.502, sd 0.0016 |
+| bilinear | 99.63% | mean 0.502, sd 0.0012 |
+| bicubic | 99.58% | mean 0.501, sd 0.0019 |
+| lanczos | 99.57% | mean 0.500, sd 0.0028 |
+| hamming | 99.56% | mean 0.500, sd 0.0075 |
+
+Two things follow. First, the kernel is irrelevant: a 1:1 checkerboard is symmetric, so any
+sane resampler lands on 0.50, and the spread across the whole hidden region is a fraction of
+a percent. There is no need to identify X's resizer to explain the effect, which answers the
+obvious objection to the model.
+
+Second, the residual 0.374% of disagreeing pixels is **99.9% boundary**: pixels whose source
+footprint straddles the checkerboarded region and the solid one, so their coverage lands
+between 0.5 and 1.0 and the threshold decides by a hair. Excluding the boundary (1.38% of the
+image), agreement is 100.000% — every single pixel.
+
+So the pipeline model is not merely consistent with what X serves; applied to the same input
+it reproduces X's transparency mask exactly wherever the mask is not deciding an edge case.
 
 ## Constraints for generated files
 

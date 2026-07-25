@@ -145,3 +145,99 @@ for cell in (1, 2, 4):
     panels.append(panel(over(box_downscale(composed, MEDIUM), WHITE), height=300))
     labels.append(f"{cell}px cell")
 strip(panels, labels, "public/figures/cell-size.png")
+
+# ------------------------------------------------------------- schematic of the rounding
+# Not a measurement: this one just draws the step the numbers above describe.
+
+SHEET_BG = (12, 12, 16)
+INK = (150, 150, 165)
+INK_DIM = (105, 105, 120)
+SOLID = (238, 178, 92)
+EDGE = (58, 58, 70)
+
+
+def rounding_figure(path, cell=40, pad=30, label_col=132, arrow=76):
+    try:
+        head = ImageFont.truetype("/System/Library/Fonts/SFNSMono.ttf", 14)
+        small = ImageFont.truetype("/System/Library/Fonts/SFNSMono.ttf", 13)
+    except OSError:
+        head = small = ImageFont.load_default()
+
+    block = cell * 4
+    xs = [label_col, label_col + block + arrow, label_col + 2 * (block + arrow)]
+    width = xs[2] + block + 72 + pad * 2
+    row_h = block + 34
+    height = pad + 26 + row_h * 2 + 26 + pad
+
+    sheet = Image.new("RGB", (width, height), SHEET_BG)
+    d = ImageDraw.Draw(sheet)
+
+    for x, text in zip(xs, ["what you upload", "shrunk by half", "written back"]):
+        d.text((pad + x, pad), text, fill=INK, font=head)
+
+    def grid(ox, oy, n, fill, note=None, note_fill=INK_DIM):
+        """n x n cells over the same area; fill(i, j) returns a colour or None."""
+        step = block // n
+        for j in range(n):
+            for i in range(n):
+                x0, y0 = ox + i * step, oy + j * step
+                c = fill(i, j)
+                d.rectangle([x0, y0, x0 + step - 1, y0 + step - 1], fill=c, outline=EDGE)
+                if note:
+                    t = note(i, j)
+                    if t:
+                        w = d.textlength(t, font=small)
+                        d.text(
+                            (x0 + (step - w) / 2, y0 + step / 2 - 8),
+                            t,
+                            fill=note_fill,
+                            font=small,
+                        )
+        return oy + block
+
+    def arrow_to(x, y, text):
+        d.line([x + 14, y, x + arrow - 20, y], fill=INK_DIM, width=2)
+        d.polygon(
+            [(x + arrow - 20, y - 5), (x + arrow - 20, y + 5), (x + arrow - 8, y)],
+            fill=INK_DIM,
+        )
+        w = d.textlength(text, font=small)
+        d.text((x + 14 + (arrow - 22 - w) / 2, y - 26), text, fill=INK_DIM, font=small)
+
+    def blend(t):
+        return tuple(round(SHEET_BG[c] + (SOLID[c] - SHEET_BG[c]) * t) for c in range(3))
+
+    rows = [
+        (
+            "hidden region",
+            lambda i, j: SOLID if (i + j) % 2 == 0 else None,
+            0.5,
+            (236, 236, 244),
+            None,
+            "gone",
+        ),
+        ("visible region", lambda i, j: SOLID, 1.0, (74, 52, 18), SOLID, "kept"),
+    ]
+
+    y = pad + 26
+    for name, fill, avg, note_fill, result, verdict in rows:
+        d.text((pad, y + block / 2 - 8), name, fill=INK, font=head)
+        grid(pad + xs[0], y, 4, fill)
+        grid(pad + xs[1], y, 2, lambda i, j: blend(avg), lambda i, j: f"{avg:.2f}", note_fill)
+        grid(pad + xs[2], y, 2, lambda i, j: result)
+        arrow_to(pad + xs[0] + block, y + block / 2, "average")
+        arrow_to(pad + xs[1] + block, y + block / 2, "round")
+        d.text((pad + xs[2] + block + 10, y + block / 2 - 8), verdict, fill=INK_DIM, font=small)
+        y += row_h
+
+    d.text(
+        (pad, height - pad - 14),
+        "the cut sits above a half, so an averaged checkerboard is dropped and a solid block kept",
+        fill=INK_DIM,
+        font=small,
+    )
+    sheet.save(path)
+    print("wrote", path, sheet.size)
+
+
+rounding_figure("public/figures/rounding.png")
