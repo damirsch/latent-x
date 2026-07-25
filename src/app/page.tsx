@@ -1,3 +1,6 @@
+import Link from "next/link"
+import { ArrowRight } from "lucide-react"
+
 import { Studio } from "@/components/Studio"
 
 export default function Page() {
@@ -12,6 +15,12 @@ export default function Page() {
 						Make an image that hides part of itself in the X timeline and gives it back when someone presses and holds.
 					</p>
 				</div>
+				<Link
+					href='/how-it-works'
+					className='inline-flex items-center gap-1 text-amber-glow text-xs transition hover:underline'>
+					How it works, measured
+					<ArrowRight size={12} />
+				</Link>
 			</header>
 
 			<Studio />
