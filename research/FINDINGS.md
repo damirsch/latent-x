@@ -1,14 +1,15 @@
 # How the X "press and hold" image trick actually works
 
-Measured from a real post: https://x.com/prajdabre/status/2080966685306335275
-Media ID `HOEUIPRbMAAuSY0`. All numbers below are reproducible with the scripts in this folder.
+Measured from a real post: https://x.com/jm7Jimin/status/2080881842488820214
+Media id `HODHACWbYAAXT5R`. All numbers below are reproducible with the scripts in this
+folder.
 
 The sample files are not committed. Fetch them first:
 
 ```bash
 mkdir -p research/variants
 for n in thumb small medium large 4096x4096 orig; do
-  curl -s "https://pbs.twimg.com/media/HOEUIPRbMAAuSY0?format=png&name=$n" \
+  curl -s "https://pbs.twimg.com/media/HODHACWbYAAXT5R?format=png&name=$n" \
     -o "research/variants/$n.png"
 done
 ```
@@ -26,8 +27,8 @@ The real mechanism is a **quantisation artefact in X's thumbnail pipeline**:
 2. To build a preview variant, X downscales the image. In the checkerboard region the
    resampled alpha lands near 50%.
 3. X re-encodes every variant as PNG8 with **binary** alpha again — a single fully
-   transparent palette index, no partial alpha anywhere. The ~50% alpha therefore has to
-   be rounded, and it rounds **down to fully transparent**.
+   transparent palette index, no partial alpha anywhere. The ~50% alpha therefore has to be
+   rounded, and it rounds **down to fully transparent**.
 4. Result: the checkerboarded region does not become faint in the timeline. It disappears
    completely. Only the fully opaque region survives.
 5. Loading the original brings back the untouched checkerboard, and the hidden artwork
@@ -59,14 +60,18 @@ entire effect is carried by *which* pixels are transparent, not by their colour.
 
 `research/alpha.py`
 
-In `orig` (2305x2432), 36.0% of pixels are transparent. Split by the parity of `(x + y)`:
+In `orig` (1376x2432), 46.75% of pixels are transparent. Split by the parity of `(x + y)`:
 
 - parity 0: **0.00%** transparent
-- parity 1: **72.01%** transparent
+- parity 1: **93.49%** transparent
 
-All transparent pixels sit on a single sublattice. So 72% of the image area is
-checkerboarded (the hidden region) and 28% is left fully opaque (the part visible in the
+All transparent pixels sit on a single sublattice. So 93.5% of the image area is
+checkerboarded (the hidden region) and 6.5% is left fully opaque (the part visible in the
 feed). Within the hidden region exactly every second pixel is dropped.
+
+This is also visible by eye: magnify any of these images and the hidden area is a regular
+one-pixel grid, not a smooth translucent wash. That grid is the thing that gives the
+mechanism away, since it only makes sense if you expect the image to be downscaled.
 
 ## Measurement 3: the alpha transfer function
 
@@ -75,10 +80,10 @@ the local opacity coverage against the preview's alpha.
 
 | Source coverage | P(opaque in preview) |
 |---|---|
-| 0.40 - 0.45 | 0.003 |
-| 0.50 - 0.55 | 0.003 |
-| 0.55 - 0.60 | 0.000 |
-| 0.60 - 0.70 | 1.000 |
+| 0.40 - 0.45 | 0.007 |
+| 0.50 - 0.55 | 0.005 |
+| 0.55 - 0.60 | 0.004 |
+| 0.60 - 0.70 | 0.984 |
 | 0.70 - 0.80 | 0.999 |
 | 0.99 - 1.00 | 1.000 |
 
@@ -92,11 +97,11 @@ A 1:1 checkerboard gives exactly 0.50, comfortably below it. Solid areas give 1.
 
 | Variant | Size | Ratio | Transparent | Isolated transparent px | Result |
 |---|---|---|---|---|---|
-| `orig` | 2305x2432 | 1.00 | 36.0% | - | checkerboard intact |
-| `large` | 1941x2048 | 1.19 | 39.9% | 66.1% | **breaks into speckle** |
-| `medium` | 1137x1200 | 2.03 | 71.7% | 0.10% | clean transparency |
-| `small` | 644x679 | 3.58 | 71.5% | 0.17% | clean transparency |
-| `thumb` | 150x150 | 15.37 | 68.4% | 0.14% | clean transparency |
+| `orig` | 1376x2432 | 1.00 | 46.8% | - | checkerboard intact |
+| `large` | 1159x2048 | 1.19 | 48.3% | 78.0% | **breaks into speckle** |
+| `medium` | 679x1200 | 2.03 | 92.9% | 0.13% | clean transparency |
+| `small` | 385x680 | 3.57 | 92.6% | 0.22% | clean transparency |
+| `thumb` | 150x150 | cropped square | 87.5% | 0.70% | clean transparency |
 
 This is the practical rule nobody states: **the downscale ratio has to be at least ~2**.
 At ratio 1.19 each output pixel covers only ~1.4 source pixels, so coverage varies wildly

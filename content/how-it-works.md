@@ -6,8 +6,10 @@ alone on a white field becomes a full illustration. Floating clothes acquire the
 wearing them.
 
 I wanted to make these, so I went looking for an explanation, and every write-up I could
-find described a different technique than the one the current posts use. So I measured a
-real post instead. This is what is actually happening, with the numbers.
+find described a different technique than the one the current posts actually use. So I took
+one of the images apart myself: zoomed in until I noticed something none of the articles
+mentioned, guessed at a mechanism, and then posted test files until the guesses stopped
+being wrong. What follows is the result of that, with the numbers behind it.
 
 If you just want to make one: **[the tool is here](https://github.com/damirsch/latent-x)**.
 It runs entirely in your browser and nothing gets uploaded.
@@ -37,14 +39,30 @@ premise is that the timeline background is white.
 That last point is what made me suspicious. The posts going viral right now work in dark
 mode. If the mechanism were background arithmetic, they could not.
 
+## The first clue is visible if you just zoom in
+
+Before measuring anything, download one of these images and magnify it. The hidden part is
+not a smooth translucent wash, which is what the background-arithmetic technique would
+produce. It is a grid: one pixel of picture, then one fully transparent pixel, alternating
+in both directions, all the way across.
+
+That was the observation that reframed the problem for me. A regular one-pixel grid is not
+something you would design for a colour illusion — it is something that only makes sense if
+you expect the image to be *shrunk*. Averaging neighbouring pixels is what shrinking does,
+and a grid like that is built to land on a specific average.
+
+So the interesting thing was probably not how the pixels get composited against a
+background, but what happens to them on the way through X's resizer.
+
 ## What is actually in the file
 
-I took a live post, pulled both the original and the timeline version, and looked at the
+I took a live post, pulled the original and every preview size X exposes, and looked at the
 bytes rather than the pixels.
 
-The reference is `x.com/prajdabre/status/2080966685306335275`, media id
-`HOEUIPRbMAAuSY0`. The original is 2305×2432. Both files turn out to be 8-bit palette PNGs
-with a `tRNS` chunk, and the interesting part is what is in that chunk:
+The reference is [this post](https://x.com/jm7Jimin/status/2080881842488820214), media id
+`HODHACWbYAAXT5R`. The original is 1376×2432. Both the original and the timeline version
+turn out to be 8-bit palette PNGs with a `tRNS` chunk, and the interesting part is what is
+in that chunk:
 
 | | original | timeline version |
 |---|---|---|
@@ -60,15 +78,17 @@ is either fully opaque or fully gone, in both files.
 That immediately rules out the background-arithmetic technique, which depends entirely on
 intermediate alpha values.
 
-So where does the effect come from? From *which* pixels are transparent. In the original,
-36% of pixels are transparent. Split them by whether `(x + y)` is even or odd:
+So the effect comes from *which* pixels are transparent, and this is where the thing you can
+see by zooming in shows up in the data. In the original, 46.75% of pixels are transparent.
+Split them by whether `(x + y)` is even or odd:
 
 - even: **0.00%** transparent
-- odd: **72.01%** transparent
+- odd: **93.49%** transparent
 
-Every transparent pixel sits on one half of a checkerboard. 72% of the image area is
-covered by that checkerboard, and in it exactly every second pixel has been deleted. The
-remaining 28% — the part you see in the timeline — is left completely solid.
+Every single transparent pixel sits on one half of a checkerboard, and not one sits on the
+other. So 93.5% of the image area is covered by that checkerboard, with exactly every second
+pixel deleted inside it. The remaining 6.5% — the sliver you see in the timeline — is left
+completely solid.
 
 ## What X does to it
 
@@ -78,14 +98,14 @@ size, and what happened to the hidden region:
 
 | Variant | Size | Downscale ratio | Transparent | Isolated transparent pixels |
 |---|---|---|---|---|
-| original | 2305×2432 | 1.00 | 36.0% | — |
-| 2048px | 1941×2048 | 1.19 | 39.9% | 66.1% |
-| 1200px | 1137×1200 | 2.03 | 71.7% | 0.10% |
-| 680px | 644×679 | 3.58 | 71.5% | 0.17% |
-| 150px | 150×150 | 15.37 | 68.4% | 0.90% |
+| original | 1376×2432 | 1.00 | 46.8% | — |
+| 2048px | 1159×2048 | 1.19 | 48.3% | 78.0% |
+| 1200px | 679×1200 | 2.03 | 92.9% | 0.13% |
+| 680px | 385×680 | 3.58 | 92.6% | 0.22% |
+| 150px | 150×150 | cropped square | 87.5% | 0.70% |
 
 Look at the 1200px row. The hidden region went from 50% transparent to **100% transparent**.
-72% of the area was checkerboarded in the original; 71.7% of the preview is transparent.
+93.5% of the area was checkerboarded in the original; 92.9% of the preview is transparent.
 The region did not become faint. It ceased to exist.
 
 The reason is in the second column of that first table. When X builds a variant it shrinks
@@ -99,15 +119,20 @@ survived:
 
 | Source coverage | Probability the pixel stays opaque |
 |---|---|
-| 0.40 – 0.45 | 0.003 |
-| 0.50 – 0.55 | 0.003 |
-| 0.55 – 0.60 | 0.000 |
-| 0.60 – 0.70 | 1.000 |
+| 0.40 – 0.45 | 0.007 |
+| 0.50 – 0.55 | 0.005 |
+| 0.55 – 0.60 | 0.004 |
+| 0.60 – 0.70 | 0.984 |
+| 0.70 – 0.80 | 0.999 |
 | 0.99 – 1.00 | 1.000 |
 
 A hard step, with nothing in between. The cut sits between 0.55 and 0.60 coverage. A
 checkerboard produces exactly 0.50, which falls under it. Solid areas produce 1.00, which
 clears it.
+
+The same structure and the same threshold turned up on every post of this kind I pulled
+apart, with the ratios landing on 2.03 each time, so this is not one person's quirk of
+export settings.
 
 That is the whole trick. Not a colour illusion, not compression, not the background. An
 image is shrunk, its transparency is rounded to on-or-off, and a one-pixel checkerboard is
@@ -233,9 +258,18 @@ encoding compensates for it, at the cost of clipping highlights.
 
 ## Reproducing this
 
-Every number above comes from scripts in
-[the repository](https://github.com/damirsch/latent-x) under `research/`. They fetch the
-reference post's variants from the CDN and recompute the palette structure, the checkerboard
-geometry, the rounding threshold, the per-variant behaviour and the cell-size limits. The
-encoder itself can be run outside the browser to check that its output has the same
-structure as the file X served.
+None of the above came from documentation. X publishes nothing about how it builds preview
+variants, and the write-ups that exist describe a different technique. Everything here was
+reverse-engineered: zoom in on one of these images, notice the one-pixel grid, form a theory
+about why the grid would be there, then post test files and measure what comes back until
+the theory either holds or breaks. Two of my theories broke along the way, and both are
+written up above rather than quietly dropped, because the failures are the part that pins
+the mechanism down.
+
+Every number comes from scripts in [the repository](https://github.com/damirsch/latent-x)
+under `research/`. They fetch the reference post's variants from the CDN and recompute the
+palette structure, the checkerboard geometry, the rounding threshold, the per-variant
+behaviour and the cell-size limits. The encoder can also be run outside the browser to check
+that its output has the same structure as the file X served.
+
+If you find a case where this breaks, I would like to know.

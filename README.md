@@ -34,8 +34,9 @@ cell would need 5760px, which is past the 4096px cap X enforces.
 
 **The upload size is a window, roughly 2400-4096px.** The timeline is served a variant of
 at most 1200px, so below 2400px the downscale ratio drops under 2 and the checkerboard
-speckles instead of vanishing. On the reference post the ratio was 2.03 and 0.10% of the
-hidden region leaked through; at ratio 1.19 the same file leaked 66%.
+speckles instead of vanishing. On the reference post the ratio was 2.03 and 0.13% of the
+hidden region's transparent pixels came out isolated; at ratio 1.19 the same file came out
+78% isolated, which reads as noise rather than a clean reveal.
 
 There is an upper bound too, which is less obvious. The reveal on mobile appears to top out
 at the 2048px variant rather than the true original, so at a 4096px upload that variant is
@@ -58,7 +59,7 @@ and `Pillow`.
 # fetch the reference post's variants (media id from research/FINDINGS.md)
 mkdir -p research/variants
 for n in thumb small medium large 4096x4096 orig; do
-  curl -s "https://pbs.twimg.com/media/HOEUIPRbMAAuSY0?format=png&name=$n" \
+  curl -s "https://pbs.twimg.com/media/HODHACWbYAAXT5R?format=png&name=$n" \
     -o "research/variants/$n.png"
 done
 
