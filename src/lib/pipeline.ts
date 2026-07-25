@@ -8,23 +8,22 @@ export const MAX_UPLOAD_SIDE = 4096
 export const MAX_FILE_BYTES = 5 * 1024 * 1024
 
 /**
- * The timeline is served the `medium` variant at most, so the upload has to be at least
- * twice that for a 1:1 checkerboard to average out to exactly 0.5 coverage everywhere.
+ * The usable size is a window, not "bigger is better".
+ *
+ * Lower bound: the timeline is served the `medium` variant (1200px), and the checkerboard
+ * only averages to a clean 0.5 coverage at a downscale ratio of 2 or more. Below 2400px it
+ * speckles instead of vanishing.
+ *
+ * Upper bound: the reveal itself happens at the `large` variant (2048px), because that is
+ * as far as the mobile press-and-hold gesture appears to go. At 4096px the ratio to `large`
+ * reaches 2 as well, so the image stays hidden there too and nothing ever comes back on a
+ * phone.
  */
 export const MIN_SIDE_FOR_FEED = VARIANTS.medium * 2
+export const MAX_SIDE_FOR_REVEAL = VARIANTS.large * 2
 
-/**
- * At this size even the `large` variant is a 2x downscale, so the artwork stays hidden
- * when the image is merely opened and only appears once the viewer loads the original.
- */
-export const MIN_SIDE_FOR_VIEWER = VARIANTS.large * 2
-
-export type RevealMode = "open" | "fourk"
-
-export const REVEAL_TARGETS: Record<RevealMode, number> = {
-	open: MIN_SIDE_FOR_FEED,
-	fourk: Math.min(MIN_SIDE_FOR_VIEWER, MAX_UPLOAD_SIDE),
-}
+/** Sits inside the window with margin at both ends; the reference post uses 2432px. */
+export const TARGET_LONG_SIDE = 2560
 
 /**
  * True where the pixel survives into the visible image.
@@ -172,10 +171,10 @@ export interface SizeAdvice {
 	willDownscale: boolean
 }
 
-/** Chooses the working resolution for a source image and a chosen reveal style. */
-export function planSize(srcW: number, srcH: number, mode: RevealMode): SizeAdvice {
+/** Chooses the working resolution for a source image. */
+export function planSize(srcW: number, srcH: number): SizeAdvice {
 	const longSide = Math.max(srcW, srcH)
-	const target = Math.min(REVEAL_TARGETS[mode], MAX_UPLOAD_SIDE)
+	const target = TARGET_LONG_SIDE
 	return {
 		target,
 		willUpscale: longSide < target,

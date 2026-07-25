@@ -32,11 +32,15 @@ in [research/FINDINGS.md](research/FINDINGS.md).
 periods for the average to land on 0.5. A 2px cell would need a 3600px upload, and a 3px
 cell would need 5760px, which is past the 4096px cap X enforces.
 
-**The upload needs a long side of at least 2400px.** The timeline is served a variant of at
-most 1200px, so anything smaller than 2400px gives a downscale ratio under 2, and the
-checkerboard breaks into visible speckle instead of vanishing. On the reference post the
-ratio was 2.03 and 0.10% of the hidden region leaked through; at ratio 1.19 the same file
-leaked 66%.
+**The upload size is a window, roughly 2400-4096px.** The timeline is served a variant of
+at most 1200px, so below 2400px the downscale ratio drops under 2 and the checkerboard
+speckles instead of vanishing. On the reference post the ratio was 2.03 and 0.10% of the
+hidden region leaked through; at ratio 1.19 the same file leaked 66%.
+
+There is an upper bound too, which is less obvious. The reveal on mobile appears to top out
+at the 2048px variant rather than the true original, so at a 4096px upload that variant is
+*also* a 2x downscale and the picture never comes back on a phone at all. The tool targets
+2560px and does not offer a choice, since both ends of the window are failure modes.
 
 ## Development
 

@@ -2,11 +2,10 @@
 
 import { AlertTriangle, CheckCircle2, Info } from "lucide-react"
 
-import { MAX_FILE_BYTES, type RevealMode, type SizeAdvice } from "@/lib/pipeline"
+import { MAX_FILE_BYTES, type SizeAdvice } from "@/lib/pipeline"
 
 interface Props {
 	sizePlan: SizeAdvice | null
-	revealMode: RevealMode
 	maskCoverage: number
 	exported: { size: number; colors: number } | null
 }
@@ -18,7 +17,7 @@ interface Note {
 	text: string
 }
 
-export function Warnings({ sizePlan, revealMode, maskCoverage, exported }: Props) {
+export function Warnings({ sizePlan, maskCoverage, exported }: Props) {
 	const notes: Note[] = []
 
 	if (maskCoverage < 0.005) {
@@ -42,21 +41,14 @@ export function Warnings({ sizePlan, revealMode, maskCoverage, exported }: Props
 	if (sizePlan?.willDownscale) {
 		notes.push({
 			level: "info",
-			text: `Your image is larger than ${sizePlan.target}px, so it will be scaled down to a size X accepts.`,
+			text: `Your image is larger than ${sizePlan.target}px, so it will be scaled down. Going bigger does not help here and eventually breaks the reveal, so the tool holds this size on purpose.`,
 		})
 	}
 
-	notes.push(
-		revealMode === "open"
-			? {
-					level: "info",
-					text: "Tapping the image is already enough to bring the hidden part back, though it looks grainy at first. Holding it loads the original and cleans it up.",
-				}
-			: {
-					level: "info",
-					text: "The hidden part stays hidden even after someone taps the image. It only appears once they press and hold to load the original, which makes the reveal more of a surprise.",
-				}
-	)
+	notes.push({
+		level: "info",
+		text: "Tapping the image brings the hidden part back, grainy at first. Pressing and holding loads the original and cleans it up.",
+	})
 
 	if (exported && exported.size > MAX_FILE_BYTES) {
 		notes.push({

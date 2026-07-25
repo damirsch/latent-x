@@ -12,7 +12,7 @@ import {
 	type AutoMode,
 	type Mask,
 } from "@/lib/mask"
-import { encodeLatentPng, MAX_FILE_BYTES, planSize, REVEAL_TARGETS, type RevealMode } from "@/lib/pipeline"
+import { encodeLatentPng, MAX_FILE_BYTES, planSize, TARGET_LONG_SIDE } from "@/lib/pipeline"
 import { compositeOver, simulateVariant, VARIANTS, type Rgba } from "@/lib/simulate"
 import { Dropzone } from "./Dropzone"
 import { MaskCanvas } from "./MaskCanvas"
@@ -45,7 +45,6 @@ function drawToRgba(image: HTMLImageElement, longSide: number): Rgba {
 export function Studio() {
 	const [image, setImage] = useState<HTMLImageElement | null>(null)
 	const [fileName, setFileName] = useState("latent")
-	const [revealMode, setRevealMode] = useState<RevealMode>("open")
 	const [brushSize, setBrushSize] = useState(90)
 	const [erasing, setErasing] = useState(false)
 	const [revealGain, setRevealGain] = useState(1)
@@ -58,7 +57,7 @@ export function Studio() {
 	const workRef = useRef<Rgba | null>(null)
 	const maskRef = useRef<Mask | null>(null)
 
-	const workLong = REVEAL_TARGETS[revealMode]
+	const workLong = TARGET_LONG_SIDE
 
 	// Rebuild the working buffer whenever the source or the target resolution changes.
 	useEffect(() => {
@@ -171,7 +170,7 @@ export function Studio() {
 		return n / Math.ceil(mask.length / 7)
 	}, [maskVersion])
 
-	const sizePlan = image ? planSize(image.naturalWidth, image.naturalHeight, revealMode) : null
+	const sizePlan = image ? planSize(image.naturalWidth, image.naturalHeight) : null
 
 	if (!image) {
 		return (
@@ -283,7 +282,7 @@ export function Studio() {
 					/>
 					<PreviewPanel
 						label="Image opened"
-						hint={revealMode === "open" ? "partial reveal" : "still hidden"}
+						hint="comes back, grainy"
 						image={states ? compositeOver(states.opened, VIEWER_BG) : null}
 					/>
 					<PreviewPanel
@@ -295,23 +294,6 @@ export function Studio() {
 				</div>
 
 				<div className="space-y-3 rounded-lg border border-ink-700 bg-ink-900 p-4">
-					<Field label="Reveal style">
-						<div className="grid grid-cols-2 gap-2">
-							<ModeButton
-								active={revealMode === "open"}
-								onClick={() => setRevealMode("open")}
-								title="On open"
-								sub="2400px"
-							/>
-							<ModeButton
-								active={revealMode === "fourk"}
-								onClick={() => setRevealMode("fourk")}
-								title="On 4K load"
-								sub="4096px"
-							/>
-						</div>
-					</Field>
-
 					<Field label={`Reveal brightness  ${revealGain.toFixed(2)}x`}>
 						<input
 							type="range"
@@ -338,12 +320,7 @@ export function Studio() {
 					</label>
 				</div>
 
-				<Warnings
-					sizePlan={sizePlan}
-					revealMode={revealMode}
-					maskCoverage={maskCoverage}
-					exported={exported}
-				/>
+				<Warnings sizePlan={sizePlan} maskCoverage={maskCoverage} exported={exported} />
 
 				<button
 					onClick={handleExport}
@@ -400,32 +377,6 @@ function AutoButton({ onClick, children }: { onClick: () => void; children: Reac
 			className="rounded-md border border-ink-700 px-2.5 py-1 text-ink-300 transition hover:border-ink-600 hover:text-ink-100"
 		>
 			{children}
-		</button>
-	)
-}
-
-function ModeButton({
-	active,
-	onClick,
-	title,
-	sub,
-}: {
-	active: boolean
-	onClick: () => void
-	title: string
-	sub: string
-}) {
-	return (
-		<button
-			onClick={onClick}
-			className={`rounded-md border px-3 py-2 text-left transition ${
-				active
-					? "border-amber-glow/50 bg-amber-glow/10"
-					: "border-ink-700 hover:border-ink-600"
-			}`}
-		>
-			<div className={`text-xs ${active ? "text-amber-glow" : "text-ink-100"}`}>{title}</div>
-			<div className="font-mono text-[10px] text-ink-400">{sub}</div>
 		</button>
 	)
 }

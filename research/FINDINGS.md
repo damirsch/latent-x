@@ -134,13 +134,35 @@ The coverage standard deviation makes the same point: at cell 1px / ratio 2.03 i
 Given X's 4096px upload cap, **1x1 is the only cell size that is comfortably usable**. It is
 not an aesthetic choice, it is the only one that fits inside the platform's constraints.
 
-## Design consequence: two reveal styles
+## Measurement 6: the usable size is a window, not a minimum
 
-- **Reveal on open** (long side 2400-3000): `large` is a 1.2x downscale, so opening the
-  image already shows the hidden art, just noisy. Pressing and holding cleans it up.
-- **Reveal only on 4K load** (long side ~4096): `large` becomes a 2x downscale and hides
-  the art too, so the artwork only appears when the viewer explicitly loads the original.
-  This is the purest form of the trick.
+The variant table above suggests a tempting idea: upload at 4096px so that `large` is also
+a 2x downscale, keep the art hidden even when the image is opened, and make the reveal
+depend on the explicit press-and-hold. We built that as an option and it does not work.
+
+Posting a 4096px file and checking it on a phone, the hidden region stayed transparent both
+when the image was opened *and* after pressing and holding. On desktop the same file
+revealed correctly on open.
+
+The straightforward reading is that the mobile press-and-hold does not fetch the true
+original; it stops at `large` (2048px). At a 4096px upload the ratio to `large` is exactly
+2.0, so the checkerboard averages cleanly there as well and there is simply nothing left to
+reveal on a phone. Desktop does fetch the original, which is why it behaved differently.
+
+That turns the size requirement into a two-sided window:
+
+| Bound | Comes from | Value |
+|---|---|---|
+| Lower | ratio to `medium` (1200) must be >= 2, or the feed speckles | 2400px |
+| Upper | ratio to `large` (2048) must be < 2, or nothing ever reveals on mobile | 4096px |
+
+The reference post sits at 2432px, just inside the lower edge. The tool targets 2560px and
+no longer offers a choice, because every value outside this window breaks one end or the
+other.
+
+Caveat: the upper bound rests on a single hands-on test rather than a sweep, and the exact
+variant the mobile gesture requests was inferred from the behaviour rather than observed on
+the wire. The lower bound is measured directly and holds independently.
 
 ## Constraints for generated files
 
