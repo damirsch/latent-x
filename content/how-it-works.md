@@ -96,6 +96,12 @@ and a one-pixel checkerboard is built to sit just below where the rounding falls
 Every post of this kind I pulled apart had the same structure and the same rounding
 behaviour, so this is not one person's quirk of export settings.
 
+The real test of a description like this is whether you can build something from it, so I
+wrote an encoder that follows it and nothing else — palette PNG, one transparent entry, a
+one-pixel checkerboard over the region to hide — and posted the output. It behaves as
+described: gone from the timeline in both themes, back on tap. That encoder is the tool
+linked at the top of this page.
+
 ## Why this one survives dark mode
 
 Because the hidden region does not end up partly transparent. It ends up *entirely*

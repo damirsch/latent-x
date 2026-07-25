@@ -39,6 +39,14 @@ simply takes on whatever background it is placed on. **The trick works in light 
 dark mode equally well**, which is the clearest way to tell it apart from the older
 background-algebra technique.
 
+## Confirmed in the other direction
+
+The description above was also tested constructively, not just by taking apart someone
+else's file. A generated PNG following only the rules in this document — palette, single
+transparent index, 1x1 checkerboard over the hidden region, 2560px long side — was posted
+and behaves as predicted: absent from the timeline in both light and dark mode, and revealed
+on tap. So the model is sufficient to produce the effect, not merely consistent with it.
+
 ## Measurement 1: file structure
 
 `research/png_chunks.py`
