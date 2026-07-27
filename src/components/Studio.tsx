@@ -24,7 +24,7 @@ import { Warnings } from "./Warnings"
 const PREVIEW_LONG = 720
 
 const FEED_LIGHT: [number, number, number] = [255, 255, 255]
-const FEED_DARK: [number, number, number] = [21, 32, 43]
+const FEED_DARK: [number, number, number] = [0, 0, 0]
 const VIEWER_BG: [number, number, number] = [0, 0, 0]
 
 function drawToRgba(image: HTMLImageElement, longSide: number): Rgba {

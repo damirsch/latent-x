@@ -17,7 +17,6 @@ THRESH = 0.575
 MEDIUM, LARGE = 1200, 2048
 
 WHITE = (255, 255, 255)
-FEED_DARK = (21, 32, 43)
 BLACK = (0, 0, 0)
 
 
@@ -95,12 +94,51 @@ large = rgba("research/variants/large.png")
 strip(
     [
         panel(over(medium, WHITE)),
-        panel(over(medium, FEED_DARK)),
+        panel(over(medium, BLACK)),
         panel(over(large, BLACK)),
         panel(over(orig, BLACK)),
     ],
     ["timeline, light mode", "timeline, dark mode", "image opened", "original loaded"],
     "public/figures/states.png",
+)
+
+
+def before_after(left, right, labels, note, path, arrow=112, gap=8, pad=30, bg=(12, 12, 16)):
+    """Two states side by side with a labelled arrow between them."""
+    try:
+        font = ImageFont.truetype("/System/Library/Fonts/SFNSMono.ttf", 15)
+    except OSError:
+        font = ImageFont.load_default()
+
+    h = max(left.height, right.height)
+    sheet = Image.new("RGB", (left.width + arrow + right.width + pad * 2, h + pad + 30), bg)
+    d = ImageDraw.Draw(sheet)
+
+    for im, x in ((left, pad), (right, pad + left.width + arrow)):
+        sheet.paste(im, (x, 0))
+        d.rectangle([x, 0, x + im.width - 1, im.height - 1], outline=(58, 58, 70))
+
+    y = h // 2
+    x0 = pad + left.width + gap
+    x1 = pad + left.width + arrow - gap
+    d.line([x0, y, x1 - 12, y], fill=(150, 150, 165), width=2)
+    d.polygon([(x1 - 12, y - 6), (x1 - 12, y + 6), (x1, y)], fill=(150, 150, 165))
+    w = d.textlength(note, font=font)
+    d.text(((x0 + x1 - w) / 2, y - 30), note, fill=(150, 150, 165), font=font)
+
+    for x, label in ((pad, labels[0]), (pad + left.width + arrow, labels[1])):
+        d.text((x + 2, h + 8), label, fill=(150, 150, 165), font=font)
+
+    sheet.save(path)
+    print("wrote", path, sheet.size)
+
+
+before_after(
+    panel(over(medium, BLACK), height=440),
+    panel(over(large, BLACK), height=440),
+    ["what the timeline shows", "what you get on tap"],
+    "tap",
+    "public/figures/effect.png",
 )
 
 

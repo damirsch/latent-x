@@ -4,6 +4,8 @@ There is a format going around on X right now: an image that looks like one thin
 timeline and turns into something else the moment you open it or press and hold. A glowing
 emblem alone on an empty field becomes a full illustration.
 
+![The same post before and after a tap](../public/figures/effect.png)
+
 I wanted to make these, so I went looking for an explanation, and every write-up I could
 find described a different technique than the one these posts actually use. So I took one of
 the images apart myself: zoomed in until I noticed something none of the articles mentioned,
@@ -26,9 +28,9 @@ seen on black = colour × α + black × (1 − α)
 
 Two equations, two unknowns. Solve them and each pixel's colour and transparency fall out.
 
-This works, but only on those two backgrounds. Change either one and the arithmetic breaks.
-Dark mode is a third background: not black, just dark grey. On it the file shows something
-close to the hidden picture — in the timeline, where the cover was supposed to be. Nothing is
+This works, but only if the timeline is white. In dark mode it is black — the very background
+the hidden picture was solved for — so the timeline shows the hidden picture instead of the
+cover, and the viewer shows the same thing again. Nothing is
 left to reveal. The people who documented the technique say so directly — the reference
 implementation for it is [labelled ダークモード不可](https://github.com/Kazuhito00/DualImagePNG-for-X),
 dark mode not supported.
@@ -116,7 +118,7 @@ from the timeline in both themes, back on tap. That encoder is the tool linked a
 ## Why this one survives dark mode
 
 Because the region is _entirely_ transparent rather than partly, nothing gets blended. It shows
-whatever is behind it — white in light mode, dark grey in dark mode, indistinguishable from the
+whatever is behind it — white in light mode, black in dark mode, indistinguishable from the
 background either way. The background stops being part of the mechanism, which is the practical
 difference from the older technique.
 

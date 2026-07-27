@@ -4,6 +4,8 @@ There is a format going around on X right now. In the timeline you see one pictu
 it, or press and hold, and it turns into a different one. A glowing emblem alone on an empty
 field becomes a full illustration.
 
+![The same post before and after a tap](../public/figures/effect.png)
+
 I wanted to make these. Every explanation I could find described a different technique than
 the one these posts use, so I took one of the images apart myself.
 
@@ -98,8 +100,8 @@ linked above.
 ## Why it works in dark mode
 
 Because the region ends up completely transparent rather than partly, nothing gets mixed. It
-simply shows whatever is behind it — white in light mode, dark grey in dark mode, the same as
-the background around it either way. The background is not part of the mechanism at all.
+simply shows whatever is behind it — white in light mode, black in dark mode, the same as the
+background around it either way. The background is not part of the mechanism at all.
 
 Here is the transparency itself, magnified, with transparent pixels marked in magenta — the
 original, the 2048px preview and the 1200px preview.
@@ -126,9 +128,9 @@ seen on black = colour × α + black × (1 − α)
 
 Two equations, two unknowns, and each pixel's colour and transparency fall out.
 
-This works, but only on those two backgrounds. Dark mode is a third one: not black, just dark
-grey. On it the file shows something close to the hidden picture, right there in the timeline
-where the cover was supposed to be. Nothing is left to reveal. The people who documented the
+This works, but only if the timeline is white. In dark mode it is black — the very background
+the hidden picture was solved for — so the timeline shows that hidden picture instead of the
+cover, and the viewer shows the same thing again. Nothing is left to reveal. The people who documented the
 technique say so directly — the reference implementation for it is
 [labelled ダークモード不可](https://github.com/Kazuhito00/DualImagePNG-for-X), dark mode not
 supported.
